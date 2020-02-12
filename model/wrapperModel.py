@@ -42,6 +42,7 @@ class BengaliClassifier(nn.Module):
             preds = torch.split(pred, [self.n_grapheme, self.n_vowel, self.n_consonant], dim=1)
             
         # compute our individual losses and generate single loss value
+        # TODO: test other loss functions
         loss_grapheme = F.cross_entropy(preds[0], y[:, 0])
         loss_vowel = F.cross_entropy(preds[1], y[:, 1])
         loss_consonant = F.cross_entropy(preds[2], y[:, 2])

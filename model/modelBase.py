@@ -71,9 +71,9 @@ class densenet(nn.Module):
     def __init__(self,in_channels = 1,out_dim=10, use_bn=True):
         super(densenet, self).__init__()
         
-         # convolution 
-        self.conv0 = nn.Sequential(nn.Conv2d(
-            in_channels, 3, kernel_size=3, stride=1, padding=1, bias=True))
+        # convolution -- I do not know the point is for this
+        # I will ignore this for now
+        self.conv0 = nn.Sequential(nn.Conv2d(1, 3, kernel_size=3, stride=1, padding=1, bias=True))
         
         # pretrained model 
         self.base_model = models.densenet121(pretrained=True)
