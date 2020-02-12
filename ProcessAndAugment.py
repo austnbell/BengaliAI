@@ -139,15 +139,17 @@ def genWeightTensor(column, train):
 ###################################################################
 # Main Function to Generate and Load the dataset
 ###################################################################
-def genDataset(indices, data_type = "train", train = None):
+def genDataset(indices, inputdir, data_type = "train", train = None):
     assert data_type in ['train', 'test']    
     
     submission = False if data_type == "train" else True
     indices = indices # which train files to load 
     images = prepare_image(inputdir, data_type=data_type, submission=submission, indices=indices)
+    print("~~Loaded Images~~")
     
     # run our crop and resize functions
     crop_rsz_img = runCropRsz(images)
+    print("~~Standardized Images~~")
 
     # init augmentation pipeline
     augmentation = augPipeline()
@@ -177,7 +179,7 @@ outputdir= datadir + "/processed"
 
 # load train file and generate dataset
 train = pd.read_csv(datadir+'/train.csv')
-dataset, crop_rsz_img = genDataset([0], train = train)
+dataset, crop_rsz_img = genDataset([0], inputdir, train = train)
 
 print(dataset.get_example(0))
 
