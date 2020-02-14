@@ -14,7 +14,7 @@ import torch.nn.functional as F
 
 import tqdm
 
-from utils.evalUtils import accuracy
+from utils.evalUtils import accuracy, macro_recall
 
 # wrapper class to run the entire model 
 # just requires setting our predictor to our core model class 
@@ -30,7 +30,7 @@ class BengaliClassifier(nn.Module):
 
         self.metrics_keys = [
             'loss', 'loss_grapheme', 'loss_vowel', 'loss_consonant',
-            'acc_grapheme', 'acc_vowel', 'acc_consonant']
+            'acc_grapheme', 'acc_vowel', 'acc_consonant', 'weighted_recall']
 
     def forward(self, x, y=None):
         pred = self.predictor(x)
@@ -56,7 +56,8 @@ class BengaliClassifier(nn.Module):
             'loss_consonant': loss_consonant.item(),
             'acc_grapheme': accuracy(preds[0], y[:, 0]),
             'acc_vowel': accuracy(preds[1], y[:, 1]),
-            'acc_consonant': accuracy(preds[2], y[:, 2]),
+            'acc_consonant': accuracy(preds[2], y[:, 2])
+            #'weighted_recall': macro_recall(preds, y) # will figure this out later
         }
         
         return loss, metrics, pred
