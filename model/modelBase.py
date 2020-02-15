@@ -77,11 +77,6 @@ class densenet(nn.Module):
         
         # pretrained model 
         self.base_model = models.densenet121(pretrained=True)
-        
-        # freezing pretrained model layers
-        for param in self.base_model.parameters():
-            param.requires_grad = False
-        
        
         inch = self.base_model.classifier.in_features
         

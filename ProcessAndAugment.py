@@ -145,7 +145,7 @@ def genDataset(indices, inputdir, data_type = "train", train = None):
     submission = False if data_type == "train" else True
     indices = indices # which train files to load 
     images = prepare_image(inputdir, data_type=data_type, submission=submission, indices=indices)
-    #images = images[:int(round(len(images)*.33,0))]
+    #images = images[:int(round(len(images)*.5,0))]
     print("~~Loaded Images~~")
     
     # run our crop and resize functions
