@@ -38,6 +38,7 @@ SIZE = 128
 
 # during submission, we load via parquet
 def prepare_image(datadir, data_type, submission=False, indices=[0, 1, 2, 3]):
+
     assert data_type in ['train', 'test']
     if submission:
         image_df_list = [pd.read_parquet(datadir + f'/{data_type}_image_data_{i}.parquet')
@@ -152,8 +153,9 @@ def genDataset(indices, inputdir, data_type = "train", train = None):
     crop_rsz_img = runCropRsz(images)
     print("~~Standardized Images~~")
 
+    p = .5 if data_type == "train" else 0
     # init augmentation pipeline
-    augmentation = augPipeline()
+    augmentation = augPipeline(p)
 
     # generate our dataset
     if data_type == "train":
@@ -162,7 +164,7 @@ def genDataset(indices, inputdir, data_type = "train", train = None):
         
         return dataset, crop_rsz_img
     else:
-        dataset = BengaliAIDataset(crop_rsz_img)
+        dataset = BengaliAIDataset(crop_rsz_img, transform = augmentation)
         return dataset
 
 
