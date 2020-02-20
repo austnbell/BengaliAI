@@ -6,7 +6,8 @@ import torchvision
 from torch.utils.data.sampler import WeightedRandomSampler
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
-
+import itertools
+import pandas as pd
 
 from model.modelBase import *
 from model.wrapperModel import *
@@ -41,8 +42,8 @@ classifier.requires_grad = True
 print('classifier',type(classifier))
 
 # Model Parameters
-epochs = 10
-lr = .001 # TODO: starting with flat LR, but need to implement scheduler
+epochs = 3
+lr = .01 # TODO: starting with flat LR, but need to implement scheduler
 bs = 64
 
 optimizer = torch.optim.Adam(classifier.parameters(), lr=lr)
@@ -58,7 +59,7 @@ checkpoint_every = 5 # TODO: implement model checkpoints
 
 # load train file and generate dataset
 train = pd.read_csv(datadir+'/train.csv')
-indices = [0,1,2,3] # just set to list of all indices when actually training
+indices = [0] # just set to list of all indices when actually training
 dataset, crop_rsz_img = genDataset(indices, inputdir, data_type = "train", train = train) # generates the dataset class
 
 # our weights for the weighted random sampler for each epoch
@@ -112,11 +113,13 @@ for i, wkey in zip(range(epochs), itertools.cycle(weight_keys)):
         
         optimizer.step()
         
+        
         # store metrics
         acc_root.append(metrics['acc_grapheme'].to("cpu").numpy())
         acc_consonant.append(metrics['acc_consonant'].to("cpu").numpy())
         acc_vowel.append(metrics['acc_vowel'].to("cpu").numpy())
         #print(metrics)
+        #break
     
     print("Epoch Metrics")
     print(f"grapheme root accuracy: {np.mean(acc_root)}")
@@ -124,4 +127,4 @@ for i, wkey in zip(range(epochs), itertools.cycle(weight_keys)):
     print(f"vowel diacritic accuracy: {np.mean(acc_vowel)}")
     
 
-torch.save(classifier.state_dict(),'densenet_saved_weights.pth')
+torch.save(classifier.state_dict(),'./savedModels/densenet_tmp.pth')

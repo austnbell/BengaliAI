@@ -32,7 +32,7 @@ class BengaliClassifier(nn.Module):
 
     def forward(self, x, y=None):
         pred = self.predictor(x)
-        data_type = self.data_type
+        
         if isinstance(pred, tuple):
             assert len(pred) == 3
             preds = pred
@@ -42,7 +42,7 @@ class BengaliClassifier(nn.Module):
            
         # compute our individual losses and generate single loss value
         # TODO: test other loss functions
-        if data_type == 'train':
+        if self.data_type == 'train':
             loss_grapheme = F.cross_entropy(preds[0], y[:, 0])
             loss_vowel = F.cross_entropy(preds[1], y[:, 1])
             loss_consonant = F.cross_entropy(preds[2], y[:, 2])

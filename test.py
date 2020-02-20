@@ -1,9 +1,6 @@
 # Packages
 import torch
-import torchvision
-from torch.utils.data.sampler import WeightedRandomSampler
 from torch.utils.data import DataLoader
-from torch.autograd import Variable
 import pandas as pd
 import numpy as np
 from tqdm import tqdm
@@ -45,7 +42,7 @@ def load_my_state_dict(self, state_dict):
             own_state[name].copy_(param)
 
 predictor = densenet(in_channels=1, out_dim=n_total).to(device)
-state_dict =torch.load('./densenet_saved_weights.pth')
+state_dict =torch.load('./savedModels/densenet_saved_weights.pth')
 #predictor=load_my_state_dict(model, state_dict)
 
 classifier = BengaliClassifier(predictor,data_type='test')
@@ -62,28 +59,31 @@ dataset = genDataset(indices, inputdir, data_type = "test") # generates the data
 # push to data loader
 test_loader = DataLoader(dataset, batch_size=bs, shuffle = False)
 
+
+# run 
 predictor.eval()
 classifier.eval()
-predictions = []
+
+grapheme_list = []
+vowel_list = []
+consonant_list = []
+
 with torch.no_grad():
     for inputs in tqdm(test_loader):
         inputs = inputs.to(device)
             
-        outputs1,outputs2,outputs3 = classifier(inputs.unsqueeze(1).float())
-        print(outputs1)
+        grapheme,vowel,consonant = classifier(inputs.unsqueeze(1).float())
         
-        predictions.append(outputs3.argmax(1).cpu().detach().numpy())
-        predictions.append(outputs1.argmax(1).cpu().detach().numpy())
-        predictions.append(outputs2.argmax(1).cpu().detach().numpy())
-
-
-
-print(predictions)
-
+        grapheme_list += list(grapheme.argmax(1).cpu().detach().numpy())
+        vowel_list += list(vowel.argmax(1).cpu().detach().numpy())
+        consonant_list += list(consonant.argmax(1).cpu().detach().numpy())
 
 ###submission
-
-submission = pd.read_csv('./sample_submission.csv')
-submission.target = np.hstack(np.asarray(predictions).T)
-submission.to_csv('sub_bengali.csv', index=False,)
-print(submission)
+row_id = []
+target = []
+for i in tqdm(range(len(grapheme_list))):
+    row_id += [f'Test_{i}_grapheme_root', f'Test_{i}_vowel_diacritic',
+               f'Test_{i}_consonant_diacritic']
+    target += [grapheme_list[i], vowel_list[i], consonant_list[i]]
+submission_df = pd.DataFrame({'row_id': row_id, 'target': target})
+submission_df.to_csv('submission.csv', index=False)

@@ -38,16 +38,15 @@ class DatasetMixin(Dataset):
         """Wrapper of `get_example`, to apply `transform` if necessary"""
         example = self.get_example(i)
         
-        if self.transform:
-            
-            if self.labels:
-                example_img = self.transform(image = example[0])['image']
-            
-                return example_img, example[1]
+
+        if self.train:
+            example_img = self.transform(image = example[0])['image']
         
-            # doing this terrible code, because Idk how to make the super take a none type
-            example_img = self.transform(image = example)['image']
-            return example
+            return example_img, example[1]
+    
+        # doing this terrible code, because Idk how to make the super take a none type
+        example_img = self.transform(image = example)['image']
+        return example
 
     def get_example(self, i):
         """Returns the i-th example.

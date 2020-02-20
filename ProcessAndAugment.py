@@ -90,18 +90,43 @@ def crop_resize(img0, size=SIZE, pad=16):
     
     #make sure that the aspect ratio is kept in rescaling
     img = np.pad(img, [((l-ly)//2,), ((l-lx)//2,)], mode='constant')
+    #img = cv2.normalize(img+255, None, dtype=cv2.CV_32F)
     return cv2.resize(img,(size,size))
+
+def crop_char_image(image, threshold=40./255.):
+    assert image.ndim == 2
+    is_black = image > threshold
+
+    is_black_vertical = np.sum(is_black, axis=0) > 0
+    is_black_horizontal = np.sum(is_black, axis=1) > 0
+    left = np.argmax(is_black_horizontal)
+    right = np.argmax(is_black_horizontal[::-1])
+    top = np.argmax(is_black_vertical)
+    bottom = np.argmax(is_black_vertical[::-1])
+    height, width = image.shape
+    cropped_image = image[left:height - right, top:width - bottom]
+    return cropped_image
+
+def resize(image, size=(128, 128)):
+    return cv2.resize(image, size)
+
 
 # run for all images 
 def runCropRsz(images):
     crop_rsz_img = []
     for idx in range(len(images)):
-        img0 = (255 - images[idx]).astype(np.float32) / 255
+        #img0 = (255 - images[idx]).astype(np.float32)
         #normalize each image by its max val
-        img = (img0*(255.0/img0.max())).astype(np.float32)
-        img = crop_resize(img)
+        #img = (img0*(255.0/img0.max())).astype(np.float32)
+        #img = crop_resize(img)
 
         # add to our stored list
+        #crop_rsz_img.append(img)
+        
+        img = images[idx]
+        img = crop_char_image(img, threshold = 40./255.)
+        img = resize(img)
+
         crop_rsz_img.append(img)
 
     crop_rsz_img = np.array(crop_rsz_img)
@@ -146,7 +171,7 @@ def genDataset(indices, inputdir, data_type = "train", train = None):
     submission = False if data_type == "train" else True
     indices = indices # which train files to load 
     images = prepare_image(inputdir, data_type=data_type, submission=submission, indices=indices)
-    #images = images[:int(round(len(images)*.5,0))]
+    images = images[:int(round(len(images)*.5,0))]
     print("~~Loaded Images~~")
     
     # run our crop and resize functions
