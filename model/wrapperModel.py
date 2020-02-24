@@ -56,8 +56,8 @@ class BengaliClassifier(nn.Module):
                 'loss_consonant': loss_consonant.item(),
                 'acc_grapheme': accuracy(preds[0], y[:, 0]),
                 'acc_vowel': accuracy(preds[1], y[:, 1]),
-                'acc_consonant': accuracy(preds[2], y[:, 2])
-                #'weighted_recall': macro_recall(preds, y) # will figure this out later
+                'acc_consonant': accuracy(preds[2], y[:, 2]),
+                'weighted_recall': macro_recall(pred, y) # will figure this out later
             }
         
             return loss, metrics, pred
