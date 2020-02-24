@@ -59,6 +59,15 @@ def prepare_image(datadir, data_type, submission=False, indices=[0, 1, 2, 3]):
     images = np.concatenate(images, axis=0)
     return images
 
+# convert our graphemes to labels
+def convertGrapheme(train):
+    graphemes = train.grapheme.unique()
+    num_graphemes = len(graphemes)
+    grapheme_dict = dict(zip(graphemes, range(num_graphemes)))
+    
+    return train.replace({"grapheme":grapheme_dict})
+
+
 ###################################################################
 # Crop and Resize our images
 ###################################################################
@@ -184,7 +193,7 @@ def genDataset(indices, inputdir, data_type = "train", train = None):
 
     # generate our dataset
     if data_type == "train":
-        train_labels = train[['grapheme_root', 'vowel_diacritic', 'consonant_diacritic']].values
+        train_labels = train[['grapheme_root', 'vowel_diacritic', 'consonant_diacritic', "grapheme"]].values
         dataset = BengaliAIDataset(crop_rsz_img, labels = train_labels[:len(crop_rsz_img)], transform = augmentation) 
         
         return dataset, crop_rsz_img
@@ -207,6 +216,7 @@ outputdir= datadir + "/processed"
 
 # load train file and generate dataset
 train = pd.read_csv(datadir+'/train.csv')
+train = convertGrapheme(train)
 dataset, crop_rsz_img = genDataset([0], inputdir, train = train)
 
 print(dataset.get_example(0))

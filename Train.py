@@ -9,7 +9,8 @@ from torch.autograd import Variable
 import itertools
 import pandas as pd
 
-from model.modelBase import *
+#from model.modelBase import *
+from model.modelV2 import *
 from model.wrapperModel import *
 from utils.evalUtils import *
 from ProcessAndAugment import *
@@ -21,7 +22,6 @@ outputdir= datadir + "/processed"
 
 # Parameters
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-batch_size=128
 
 n_grapheme = 168
 n_vowel = 11
@@ -42,8 +42,8 @@ classifier.requires_grad = True
 print('classifier',type(classifier))
 
 # Model Parameters
-epochs = 3
-lr = .01 # TODO: starting with flat LR, but need to implement scheduler
+epochs = 10
+lr = .001 # TODO: starting with flat LR, but need to implement scheduler
 bs = 64
 
 optimizer = torch.optim.Adam(classifier.parameters(), lr=lr)
@@ -59,7 +59,8 @@ checkpoint_every = 5 # TODO: implement model checkpoints
 
 # load train file and generate dataset
 train = pd.read_csv(datadir+'/train.csv')
-indices = [0] # just set to list of all indices when actually training
+train = convertGrapheme(train) # generate our grapheme labels
+indices = [0,1,2,3] # just set to list of all indices when actually training
 dataset, crop_rsz_img = genDataset(indices, inputdir, data_type = "train", train = train) # generates the dataset class
 
 # our weights for the weighted random sampler for each epoch
@@ -127,4 +128,4 @@ for i, wkey in zip(range(epochs), itertools.cycle(weight_keys)):
     print(f"vowel diacritic accuracy: {np.mean(acc_vowel)}")
     
 
-torch.save(classifier.state_dict(),'./savedModels/densenet_tmp.pth')
+torch.save(classifier.state_dict(),'./savedModels/whole_grapheme.pth')
