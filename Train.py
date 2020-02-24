@@ -1,21 +1,23 @@
-    
-
-# Packages
+ # Packages
 import torch
 import torchvision
 from torch.utils.data.sampler import WeightedRandomSampler
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 from torch.utils.data.sampler import SubsetRandomSampler
-from pytorchtools import EarlyStopping
+from utils.pytorchtools import EarlyStopping
 import itertools
 import pandas as pd
+import numpy as np
 
 #from model.modelBase import *
-from model.modelV2 import *
 from model.wrapperModel import *
+from model.modelV2 import *
 from utils.evalUtils import *
 from ProcessAndAugment import *
+
+# set numpy random seed
+np.random.seed(0)
 
 # paths
 datadir = "./data"
@@ -44,9 +46,12 @@ classifier.requires_grad = True
 print('classifier',type(classifier))
 
 # Model Parameters
-epochs = 10
+epochs = 20
 lr = .001 # TODO: starting with flat LR, but need to implement scheduler
 bs = 64
+valid_size = 0.2
+patience = 4
+
 
 optimizer = torch.optim.Adam(classifier.parameters(), lr=lr)
 
@@ -66,7 +71,6 @@ indices = [0,1,2,3] # just set to list of all indices when actually training
 dataset, crop_rsz_img = genDataset(indices, inputdir, data_type = "train", train = train) # generates the dataset class
 
 # Split data to training and validation
-valid_size = 0.2
 num_train = len(dataset)
 train_indices = list(range(num_train))
 np.random.shuffle(train_indices)
@@ -77,14 +81,12 @@ train_idx, valid_idx = train_indices[split:], train_indices[:split]
 train_sampler = SubsetRandomSampler(train_idx)
 valid_sampler = SubsetRandomSampler(valid_idx)
 
-
-
- 
 # obtain training indices that will be used for validation
-consonant_weights = genWeightTensor("consonant_diacritic", train[:len(crop_rsz_img)])
-root_weights = genWeightTensor("grapheme_root", train[:len(crop_rsz_img)])
-vowel_weights = genWeightTensor("vowel_diacritic", train[:len(crop_rsz_img)])
-grapheme_weights = genWeightTensor("grapheme", train[:len(crop_rsz_img)])
+# I zero out all weights for indices in the validation set 
+consonant_weights = genWeightTensor("consonant_diacritic", train[:len(crop_rsz_img)], valid_idx)
+root_weights = genWeightTensor("grapheme_root", train[:len(crop_rsz_img)], valid_idx)
+vowel_weights = genWeightTensor("vowel_diacritic", train[:len(crop_rsz_img)], valid_idx)
+grapheme_weights = genWeightTensor("grapheme", train[:len(crop_rsz_img)], valid_idx)
 
 
 weights = {"consonant_diacritic": consonant_weights,
@@ -96,21 +98,19 @@ weights = {"consonant_diacritic": consonant_weights,
 # can change the focus of the sampler like so
 weight_keys = ['grapheme', 'grapheme_root', 'vowel_diacritic', 'consonant_diacritic', 'grapheme', 'grapheme_root']
 
-# testing without sampler for now
-train_loader = DataLoader(dataset, batch_size=bs, sampler=train_sampler)
+# validation data will not change
 valid_loader = DataLoader(dataset,batch_size=bs,  sampler=valid_sampler)
 
 # initialize the early_stopping object
-patience = 20
-early_stopping = EarlyStopping(patience=patience, verbose=True)
+early_stopping = EarlyStopping(patience=patience, verbose=True, model_name = "weighted_model")
 
 for i, wkey in zip(range(epochs), itertools.cycle(weight_keys)):
     print(i, wkey)
     
     # generate sampler and loader specific to epoch
     wgt_val = weights[wkey]
-    #sampler = WeightedRandomSampler(wgt_val, len(wgt_val))
-    #train_loader = DataLoader(dataset, batch_size=bs, sampler=sampler)
+    weighted_sampler = WeightedRandomSampler(wgt_val, len(wgt_val))
+    train_loader = DataLoader(dataset, batch_size=bs, sampler=weighted_sampler)
     
     # init
     predictor.train()
@@ -179,7 +179,7 @@ for i, wkey in zip(range(epochs), itertools.cycle(weight_keys)):
     avg_valid_losses.append(valid_loss)
 
     print_msg = (f'train_loss: {train_loss:.5f} ' +
-                 f'valid_loss: {valid_loss:.5f} ' +
+                 f'valid_loss: {valid_loss:.5f}\n' +
                  f'train_recall: {np.mean(train_recall):.5f} ' +
                  f'valid_recall: {np.mean(valid_recall):.5f} ')
         
@@ -198,6 +198,7 @@ for i, wkey in zip(range(epochs), itertools.cycle(weight_keys)):
     print(f"grapheme root accuracy: {np.mean(acc_root)}")
     print(f"consonant diacritic accuracy: {np.mean(acc_consonant)}")
     print(f"vowel diacritic accuracy: {np.mean(acc_vowel)}")
+    print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
     
 
-torch.save(classifier.state_dict(),'./savedModels/whole_grapheme.pth')
+#torch.save(classifier.state_dict(),'./savedModels/whole_grapheme.pth')

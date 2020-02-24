@@ -164,10 +164,15 @@ def augPipeline(P = .5):
     
     
 # generates weights by class to pass into a sampler during training
-def genWeightTensor(column, train):
+def genWeightTensor(column, train, val_idx):
     class_counts = train[column].value_counts()
     weight = 1 / class_counts
-    return torch.tensor([weight[t] for t in train[column]])
+    wgt_tensor = torch.tensor([weight[t] for t in train[column]])
+    
+    if val_idx is not None:
+        wgt_tensor[val_idx] = 0
+        
+    return wgt_tensor
 
 
 
