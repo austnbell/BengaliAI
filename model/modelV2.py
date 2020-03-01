@@ -78,8 +78,10 @@ class densenet(nn.Module):
         self.conv0 = nn.Sequential(nn.Conv2d(1, 3, kernel_size=3, stride=1, padding=1, bias=True))
         
         # pretrained model 
-        self.base_model = models.densenet121(pretrained=True)
-       
+        # compare DenseNet and SeResNet
+        #self.base_model = models.densenet121(pretrained=True)
+        self.base_model = models.se_resnext50_32x4d(pretrained=True)
+
         inch = self.base_model.classifier.in_features
         
         # should move to train parameters
