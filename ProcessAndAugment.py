@@ -25,7 +25,7 @@ import pandas as pd
 import torch
 
 from BengaliDataset import * # import our dataset class
-
+from gridmask import GridMask
 
 # Parameters
 HEIGHT = 137
@@ -124,17 +124,17 @@ def resize(image, size=(128, 128)):
 def runCropRsz(images):
     crop_rsz_img = []
     for idx in range(len(images)):
-        #img0 = (255 - images[idx]).astype(np.float32)
-        #normalize each image by its max val
-        #img = (img0*(255.0/img0.max())).astype(np.float32)
-        #img = crop_resize(img)
+        img0 = (255 - images[idx]).astype(np.float32)
+        # normalize each image by its max val
+        img = (img0*(255.0/img0.max())).astype(np.float32)
+        img = crop_resize(img)
 
         # add to our stored list
         #crop_rsz_img.append(img)
         
-        img = images[idx]
-        img = crop_char_image(img, threshold = 40./255.)
-        img = resize(img)
+        #img = images[idx]
+        #img = crop_char_image(img, threshold = 40./255.)
+        #img = resize(img)
 
         crop_rsz_img.append(img)
 
@@ -148,19 +148,22 @@ def runCropRsz(images):
 # Data Augmentations Pipeline
 ###################################################################
 # define our augmentations
-def augPipeline(P = .5):
+def augPipeline(P = .75):
     return A.Compose([
-        A.IAAAdditiveGaussianNoise(p=.3),
+        A.IAAAdditiveGaussianNoise(p=.6),
         A.OneOf([
-            A.MedianBlur(blur_limit=3, p=0.4),
-            A.Blur(blur_limit=1, p=0.4),
+            A.MedianBlur(blur_limit=3, p=0.6),
+            A.Blur(blur_limit=1, p=0.6),
         ], p=0.5),
-        A.ShiftScaleRotate(shift_limit=.1, scale_limit=0.0, rotate_limit=15, p=.75),
+        A.ShiftScaleRotate( rotate_limit=15, p=.85), # leave shift and scale as defaults
         A.OneOf([
-            A.OpticalDistortion(p=.4),
-            A.GridDistortion(p=.2),
-            A.IAAPiecewiseAffine(p=.5),
-        ], p=.33)], p=P)
+            A.OpticalDistortion(p=.6),
+            A.GridDistortion(p=.4),
+            A.IAAPiecewiseAffine(p=.75),
+        ], p=.5),
+        GridMask(num_grid=(2,3), rotate=15, p=.75)],
+        p=P)
+
     
     
 # generates weights by class to pass into a sampler during training
@@ -185,7 +188,7 @@ def genDataset(indices, inputdir, data_type = "train", train = None):
     submission = False if data_type == "train" else True
     indices = indices # which train files to load 
     images = prepare_image(inputdir, data_type=data_type, submission=submission, indices=indices)
-    #images = images[:int(round(len(images)*.5,0))]
+    images = images[:int(round(len(images)*.5,0))]
     print("~~Loaded Images~~")
     
     # run our crop and resize functions

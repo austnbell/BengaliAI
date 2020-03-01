@@ -46,11 +46,12 @@ classifier.requires_grad = True
 print('classifier',type(classifier))
 
 # Model Parameters
-epochs = 20
-lr = .001 # TODO: starting with flat LR, but need to implement scheduler
+epochs = 3
+lr = .01 # TODO: starting with flat LR, but need to implement scheduler
 bs = 64
 valid_size = 0.2
 patience = 4
+model_name = "test_bbox"
 
 
 optimizer = torch.optim.Adam(classifier.parameters(), lr=lr)
@@ -67,7 +68,7 @@ checkpoint_every = 5 # TODO: implement model checkpoints
 # load train file and generate dataset
 train = pd.read_csv(datadir+'/train.csv')
 train = convertGrapheme(train) # generate our grapheme labels
-indices = [0,1,2,3] # just set to list of all indices when actually training
+indices = [0] # just set to list of all indices when actually training
 dataset, crop_rsz_img = genDataset(indices, inputdir, data_type = "train", train = train) # generates the dataset class
 
 # Split data to training and validation
@@ -102,7 +103,7 @@ weight_keys = ['grapheme', 'grapheme_root', 'vowel_diacritic', 'consonant_diacri
 valid_loader = DataLoader(dataset,batch_size=bs,  sampler=valid_sampler)
 
 # initialize the early_stopping object
-early_stopping = EarlyStopping(patience=patience, verbose=True, model_name = "weighted_model")
+early_stopping = EarlyStopping(patience=patience, verbose=True, model_name = model_name)
 
 for i, wkey in zip(range(epochs), itertools.cycle(weight_keys)):
     print(i, wkey)
