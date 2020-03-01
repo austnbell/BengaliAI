@@ -18,6 +18,7 @@ import torch.nn.functional as F
 from torch.nn import Sequential
 from torchvision import models
 import torchvision
+import pretrainedmodels
 
 ###############################################################################
 # Classes
@@ -80,7 +81,7 @@ class densenet(nn.Module):
         # pretrained model 
         # compare DenseNet and SeResNet
         #self.base_model = models.densenet121(pretrained=True)
-        self.base_model = models.se_resnext50_32x4d(pretrained=True)
+        self.base_model = pretrainedmodels.__dict__['se_resnext50_32x4d'](pretrained=pretrained)
 
         inch = self.base_model.classifier.in_features
         
