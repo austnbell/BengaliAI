@@ -12,7 +12,7 @@ import torch.nn.functional as F
 import tqdm
 
 from utils.evalUtils import accuracy, macro_recall
-from Loss import *
+from model.Loss import FocalLoss
 
 # wrapper class to run the entire model 
 # just requires setting our predictor to our core model class 

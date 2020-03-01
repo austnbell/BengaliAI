@@ -1,3 +1,8 @@
+
+import torch
+from torch import nn
+import torch.nn.functional as F
+
 class FocalLoss(nn.Module):
     def __init__(self, alpha=1, gamma=2, logits=False, reduce=True):
         super(FocalLoss, self).__init__()
