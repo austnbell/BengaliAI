@@ -41,7 +41,7 @@ def residual_add(lhs, rhs):
 class LinearBlock(nn.Module):
 
     def __init__(self, in_features, out_features, bias=True,
-                 use_bn=True, activation=F.relu, dropout_ratio=.5, residual=False,):
+                 use_bn=False, activation=F.relu, dropout_ratio=-1, residual=False):
         super(LinearBlock, self).__init__()
         
         self.linear = nn.Linear(in_features, out_features, bias=bias)
@@ -80,17 +80,18 @@ class densenet(nn.Module):
         
         # pretrained model 
         # compare DenseNet and SeResNet
-        #self.base_model = models.densenet121(pretrained=True)
-        self.base_model = pretrainedmodels.__dict__['se_resnext50_32x4d'](pretrained=pretrained)
-
+        self.base_model = models.densenet121(pretrained=True)
         inch = self.base_model.classifier.in_features
+        #self.base_model = pretrainedmodels.__dict__['se_resnext101_32x4d'](pretrained="imagenet")
+        #inch = self.base_model.last_linear.in_features
         
         # should move to train parameters
         activation = F.leaky_relu
         hdim = 512
         n_total_graphemes = 1285
         
-        self.lin1 = LinearBlock(inch, hdim, use_bn=use_bn, activation=activation, residual=False)
+        self.lin1 = LinearBlock(inch, hdim, use_bn=use_bn, activation=activation, 
+                                dropout_ratio = .1, residual=False)
         
         # predicts the whole grapheme 
         # the out dimension is now the number of classes for whole grapheme prediction
@@ -98,7 +99,7 @@ class densenet(nn.Module):
         
         # the input is the concatenation of lin1 and lin 2
         # input = h_dim + out_dim_lin2; output = out_dim
-        self.lin3 = LinearBlock(hdim + n_total_graphemes, out_dim, use_bn=use_bn, activation=None, residual=False)
+        self.lin3 = LinearBlock(hdim + n_total_graphemes, out_dim, use_bn=False, activation=None, residual=False)
         
         #self.lin_layers = Sequential(lin1, lin2, lin3)
 
@@ -114,5 +115,5 @@ class densenet(nn.Module):
         out = self.lin3(torch.cat((h1, h_grapheme), 1))
        
         
-        return out
+        return out, h_grapheme
     

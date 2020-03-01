@@ -31,24 +31,32 @@ class BengaliClassifier(nn.Module):
             'loss', 'loss_grapheme', 'loss_vowel', 'loss_consonant',
             'acc_grapheme', 'acc_vowel', 'acc_consonant', 'weighted_recall']
 
-    def forward(self, x, y=None):
+    def forward(self, x, whole_grapheme_loss=False, y=None):
         pred = self.predictor(x)
         
+        # if i return the whole grapheme prediction then split the tuple
         if isinstance(pred, tuple):
-            assert len(pred) == 3
-            preds = pred
-        else:
-            assert pred.shape[1] == self.n_total_class
-            preds = torch.split(pred, [self.n_grapheme, self.n_vowel, self.n_consonant], dim=1)
-           
+            assert len(pred) == 2
+            pred_grapheme = pred[1]
+            pred = pred[0]
+       
+        assert pred.shape[1] == self.n_total_class
+        preds = torch.split(pred, [self.n_grapheme, self.n_vowel, self.n_consonant], dim=1)
+        
         # compute our individual losses and generate single loss value
         # TODO: test other loss functions
         if self.data_type == 'train':
             # change cross entropy to focal loss
-            loss_grapheme = FocalLoss(preds[0], y[:, 0])
-            loss_vowel = FocalLoss(preds[1], y[:, 1])
-            loss_consonant = FocalLoss(preds[2], y[:, 2])
+            #loss_grapheme = FocalLoss(preds[0], y[:, 0])
+            #loss_vowel = FocalLoss(preds[1], y[:, 1])
+            #loss_consonant = FocalLoss(preds[2], y[:, 2])
+            loss_grapheme = F.cross_entropy(preds[0], y[:, 0])
+            loss_vowel = F.cross_entropy(preds[1], y[:, 1])
+            loss_consonant = F.cross_entropy(preds[2], y[:, 2])
+            
             loss = loss_grapheme + loss_vowel + loss_consonant
+            if whole_grapheme_loss:
+                loss += F.cross_entropy(pred_grapheme, y[:, 3])
         
         # metric summary
             metrics = {

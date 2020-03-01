@@ -46,7 +46,7 @@ classifier.requires_grad = True
 print('classifier',type(classifier))
 
 # Model Parameters
-epochs = 3
+epochs = 10
 lr = .01 # TODO: starting with flat LR, but need to implement scheduler
 bs = 64
 valid_size = 0.2
@@ -142,7 +142,9 @@ for i, wkey in zip(range(epochs), itertools.cycle(weight_keys)):
         optimizer.zero_grad()
         
         # run model - requires 4d float input
-        loss, metrics, pred = classifier(images.unsqueeze(1).float(), labels)
+        loss, metrics, pred = classifier(images.unsqueeze(1).float(),
+                                         whole_grapheme_loss = True,
+                                         y = labels)
         
         # compute loss and step
         loss.backward()
@@ -168,7 +170,9 @@ for i, wkey in zip(range(epochs), itertools.cycle(weight_keys)):
             images = Variable(images).to(device)
             labels = Variable(labels).to(device)
             
-            loss, metrics, pred = classifier(images.unsqueeze(1).float(), labels)
+            loss, metrics, pred = classifier(images.unsqueeze(1).float(),
+                                             whole_grapheme_loss = True,
+                                             y = labels)
             valid_losses.append(loss.item())
             valid_recall.append(metrics['weighted_recall'])
 
@@ -179,7 +183,7 @@ for i, wkey in zip(range(epochs), itertools.cycle(weight_keys)):
     avg_valid_losses.append(valid_loss)
 
     #activate scheduler
-    scheduler.step(valid_loss)
+    #scheduler.step(valid_loss)
 
     print_msg = (f'train_loss: {train_loss:.5f} ' +
                  f'valid_loss: {valid_loss:.5f}\n' +
