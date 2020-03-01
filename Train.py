@@ -46,7 +46,7 @@ classifier.requires_grad = True
 print('classifier',type(classifier))
 
 # Model Parameters
-epochs = 10
+epochs = 30
 lr = .01 # TODO: starting with flat LR, but need to implement scheduler
 bs = 64
 valid_size = 0.2
