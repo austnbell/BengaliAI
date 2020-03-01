@@ -18,6 +18,7 @@ import torch.nn.functional as F
 from torch.nn import Sequential
 from torchvision import models
 import torchvision
+import pretrainedmodels
 
 ###############################################################################
 # Classes
@@ -40,7 +41,7 @@ def residual_add(lhs, rhs):
 class LinearBlock(nn.Module):
 
     def __init__(self, in_features, out_features, bias=True,
-                 use_bn=True, activation=F.relu, dropout_ratio=-1, residual=False,):
+                 use_bn=True, activation=F.relu, dropout_ratio=.5, residual=False,):
         super(LinearBlock, self).__init__()
         
         self.linear = nn.Linear(in_features, out_features, bias=bias)
@@ -78,8 +79,10 @@ class densenet(nn.Module):
         self.conv0 = nn.Sequential(nn.Conv2d(1, 3, kernel_size=3, stride=1, padding=1, bias=True))
         
         # pretrained model 
-        self.base_model = models.densenet121(pretrained=True)
-       
+        # compare DenseNet and SeResNet
+        #self.base_model = models.densenet121(pretrained=True)
+        self.base_model = pretrainedmodels.__dict__['se_resnext50_32x4d'](pretrained=pretrained)
+
         inch = self.base_model.classifier.in_features
         
         # should move to train parameters

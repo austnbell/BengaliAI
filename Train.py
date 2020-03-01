@@ -57,8 +57,8 @@ model_name = "test_bbox"
 optimizer = torch.optim.Adam(classifier.parameters(), lr=lr)
 
 
-#scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-#    optimizer, mode='min', factor=0.7, patience=5, min_lr=1e-10)
+scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+    optimizer, mode='min', factor=0.7, patience=5, min_lr=1e-10)
 #scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 5)
 
 validate_every = 5 # TODO: validate every n batches or epochs
@@ -172,12 +172,14 @@ for i, wkey in zip(range(epochs), itertools.cycle(weight_keys)):
             valid_losses.append(loss.item())
             valid_recall.append(metrics['weighted_recall'])
 
-
     # calculate average loss over an epoch
     train_loss = np.average(train_losses)
     valid_loss = np.average(valid_losses)
     avg_train_losses.append(train_loss)
     avg_valid_losses.append(valid_loss)
+
+    #activate scheduler
+    scheduler.step(valid_loss)
 
     print_msg = (f'train_loss: {train_loss:.5f} ' +
                  f'valid_loss: {valid_loss:.5f}\n' +

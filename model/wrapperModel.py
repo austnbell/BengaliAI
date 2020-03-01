@@ -12,6 +12,7 @@ import torch.nn.functional as F
 import tqdm
 
 from utils.evalUtils import accuracy, macro_recall
+from model.Loss import FocalLoss
 
 # wrapper class to run the entire model 
 # just requires setting our predictor to our core model class 
@@ -43,9 +44,10 @@ class BengaliClassifier(nn.Module):
         # compute our individual losses and generate single loss value
         # TODO: test other loss functions
         if self.data_type == 'train':
-            loss_grapheme = F.cross_entropy(preds[0], y[:, 0])
-            loss_vowel = F.cross_entropy(preds[1], y[:, 1])
-            loss_consonant = F.cross_entropy(preds[2], y[:, 2])
+            # change cross entropy to focal loss
+            loss_grapheme = FocalLoss(preds[0], y[:, 0])
+            loss_vowel = FocalLoss(preds[1], y[:, 1])
+            loss_consonant = FocalLoss(preds[2], y[:, 2])
             loss = loss_grapheme + loss_vowel + loss_consonant
         
         # metric summary
