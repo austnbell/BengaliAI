@@ -47,16 +47,17 @@ class BengaliClassifier(nn.Module):
         # TODO: test other loss functions
         if self.data_type == 'train':
             # change cross entropy to focal loss
-            #loss_grapheme = FocalLoss(preds[0], y[:, 0])
-            #loss_vowel = FocalLoss(preds[1], y[:, 1])
-            #loss_consonant = FocalLoss(preds[2], y[:, 2])
-            loss_grapheme = F.cross_entropy(preds[0], y[:, 0])
-            loss_vowel = F.cross_entropy(preds[1], y[:, 1])
-            loss_consonant = F.cross_entropy(preds[2], y[:, 2])
+            loss_grapheme = FocalLoss()(preds[0], y[:, 0])
+            loss_vowel = FocalLoss()(preds[1], y[:, 1])
+            loss_consonant = FocalLoss()(preds[2], y[:, 2])
+            #loss_grapheme = F.cross_entropy(preds[0], y[:, 0])
+            #loss_vowel = F.cross_entropy(preds[1], y[:, 1])
+            #loss_consonant = F.cross_entropy(preds[2], y[:, 2])
             
             loss = loss_grapheme + loss_vowel + loss_consonant
             if whole_grapheme_loss:
-                loss += F.cross_entropy(pred_grapheme, y[:, 3])
+                loss +=FocalLoss()(pred_grapheme,y[:,3])
+                #loss += F.cross_entropy(pred_grapheme, y[:, 3])
         
         # metric summary
             metrics = {
