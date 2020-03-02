@@ -19,6 +19,7 @@ from torch.nn import Sequential
 from torchvision import models
 import torchvision
 import pretrainedmodels
+from collections import OrderedDict
 
 ###############################################################################
 # Classes
@@ -41,7 +42,7 @@ def residual_add(lhs, rhs):
 class LinearBlock(nn.Module):
 
     def __init__(self, in_features, out_features, bias=True,
-                 use_bn=False, activation=F.relu, dropout_ratio=-1, residual=False):
+                 use_bn=True, activation=F.relu, dropout_ratio=.5, residual=False,):
         super(LinearBlock, self).__init__()
         
         self.linear = nn.Linear(in_features, out_features, bias=bias)
@@ -90,6 +91,26 @@ class densenet(nn.Module):
         hdim = 512
         n_total_graphemes = 1285
         
+        # add add extra layer in front of first linear block
+        # input and output parameter still not work!!!!
+        layer0_modules = [
+                ('conv1', nn.Conv2d(3, inch, 3, stride=2, padding=1,
+                                    bias=False)),
+                ('bn1', nn.BatchNorm2d(64)),
+                ('relu1', nn.ReLU(inplace=True)),
+                ('conv2', nn.Conv2d(64, 64, 3, stride=1, padding=1,
+                                    bias=False)),
+                ('bn2', nn.BatchNorm2d(64)),
+                ('relu2', nn.ReLU(inplace=True)),
+                ('conv3', nn.Conv2d(64, 128, 3, stride=1, padding=1,
+                                    bias=False)),
+                ('bn3', nn.BatchNorm2d(128)),
+                ('relu3', nn.ReLU(inplace=True)),
+            ]
+        layer0_modules.append(('pool', nn.MaxPool2d(3, stride=2, ceil_mode=True)))
+
+        self.layer0 = nn.Sequential(OrderedDict(layer0_modules))
+        
         self.lin1 = LinearBlock(inch, hdim, use_bn=use_bn, activation=activation, 
                                 dropout_ratio = .1, residual=False)
         
@@ -109,6 +130,8 @@ class densenet(nn.Module):
         h = self.base_model.features(h) # I want to make sure that this is correct
         h = torch.sum(h, dim=(-1, -2)) # pooling function 
         
+        h = self.layer0(h)
+        
         # take out of loop and write out manually
         h1 = self.lin1(h)
         h_grapheme = self.lin2(h1)
@@ -116,4 +139,3 @@ class densenet(nn.Module):
        
         
         return out, h_grapheme
-    
