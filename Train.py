@@ -48,18 +48,18 @@ print('classifier',type(classifier))
 # Model Parameters
 epochs = 30
 lr = .001 # TODO: starting with flat LR, but need to implement scheduler
-bs = 32
+bs = 128
 valid_size = 0.2
-patience = 8
+patience = 9
 model_name = "test_bbox"
 
 
 optimizer = torch.optim.Adam(classifier.parameters(), lr=lr)
 
 
-scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-    optimizer, mode='min', factor=0.7, patience=5, min_lr=1e-10)
-#scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 5)
+#scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+#    optimizer, mode='min', factor=0.7, patience=4, min_lr=1e-10)
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 5)
 
 validate_every = 5 # TODO: validate every n batches or epochs
 checkpoint_every = 5 # TODO: implement model checkpoints
@@ -68,7 +68,7 @@ checkpoint_every = 5 # TODO: implement model checkpoints
 # load train file and generate dataset
 train = pd.read_csv(datadir+'/train.csv')
 train = convertGrapheme(train) # generate our grapheme labels
-indices = [0,1,2,3] # just set to list of all indices when actually training
+indices = [0,] # just set to list of all indices when actually training
 dataset, crop_rsz_img = genDataset(indices, inputdir, data_type = "train", train = train) # generates the dataset class
 
 # Split data to training and validation
@@ -143,7 +143,7 @@ for i, wkey in zip(range(epochs), itertools.cycle(weight_keys)):
         
         # run model - requires 4d float input
         loss, metrics, pred = classifier(images.unsqueeze(1).float(),
-                                         whole_grapheme_loss = True,
+                                         whole_grapheme_loss = False,
                                          y = labels)
         
         # compute loss and step
@@ -171,7 +171,7 @@ for i, wkey in zip(range(epochs), itertools.cycle(weight_keys)):
             labels = Variable(labels).to(device)
             
             loss, metrics, pred = classifier(images.unsqueeze(1).float(),
-                                             whole_grapheme_loss = True,
+                                             whole_grapheme_loss = False,
                                              y = labels)
             valid_losses.append(loss.item())
             valid_recall.append(metrics['weighted_recall'])
@@ -181,9 +181,9 @@ for i, wkey in zip(range(epochs), itertools.cycle(weight_keys)):
     valid_loss = np.average(valid_losses)
     avg_train_losses.append(train_loss)
     avg_valid_losses.append(valid_loss)
-
+    print(valid_loss)
     #activate scheduler
-    #scheduler.step(valid_loss)
+    scheduler.step(valid_loss)
 
     print_msg = (f'train_loss: {train_loss:.5f} ' +
                  f'valid_loss: {valid_loss:.5f}\n' +
@@ -205,6 +205,7 @@ for i, wkey in zip(range(epochs), itertools.cycle(weight_keys)):
     print(f"grapheme root accuracy: {np.mean(acc_root)}")
     print(f"consonant diacritic accuracy: {np.mean(acc_consonant)}")
     print(f"vowel diacritic accuracy: {np.mean(acc_vowel)}")
+    print("learning rate is ", optimizer.param_groups[0]["lr"])
     print("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n")
     
 
