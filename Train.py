@@ -49,7 +49,7 @@ print('classifier',type(classifier))
 epochs = 30
 lr = .001 # TODO: starting with flat LR, but need to implement scheduler
 bs = 128
-valid_size = 0.2
+valid_size = 0.1
 patience = 9
 model_name = "test_bbox"
 
@@ -58,7 +58,7 @@ optimizer = torch.optim.Adam(classifier.parameters(), lr=lr)
 
 
 #scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
-#    optimizer, mode='min', factor=0.7, patience=4, min_lr=1e-10)
+#   optimizer, mode='min', factor=0.7, patience=4, min_lr=1e-10)
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, 5)
 
 validate_every = 5 # TODO: validate every n batches or epochs
@@ -68,7 +68,7 @@ checkpoint_every = 5 # TODO: implement model checkpoints
 # load train file and generate dataset
 train = pd.read_csv(datadir+'/train.csv')
 train = convertGrapheme(train) # generate our grapheme labels
-indices = [0,] # just set to list of all indices when actually training
+indices = [0,1,2,3] # just set to list of all indices when actually training
 dataset, crop_rsz_img = genDataset(indices, inputdir, data_type = "train", train = train) # generates the dataset class
 
 # Split data to training and validation
