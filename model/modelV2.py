@@ -42,7 +42,7 @@ def residual_add(lhs, rhs):
 class LinearBlock(nn.Module):
 
     def __init__(self, in_features, out_features, bias=True,
-                 use_bn=True, activation=F.relu, dropout_ratio=.5, residual=False,):
+                 use_bn=True, activation=F.relu, dropout_ratio=-1, residual=False,):
         super(LinearBlock, self).__init__()
         
         self.linear = nn.Linear(in_features, out_features, bias=bias)
@@ -81,10 +81,10 @@ class densenet(nn.Module):
         
         # pretrained model 
         # compare DenseNet and SeResNet
-        self.base_model = models.densenet121(pretrained=True)
-        inch = self.base_model.classifier.in_features
-        #self.base_model = pretrainedmodels.__dict__['se_resnext101_32x4d'](pretrained="imagenet")
-        #inch = self.base_model.last_linear.in_features
+        #self.base_model = models.densenet121(pretrained=True)
+        #inch = self.base_model.classifier.in_features
+        self.base_model = pretrainedmodels.__dict__['se_resnext101_32x4d'](pretrained="imagenet")
+        inch = self.base_model.last_linear.in_features
         
         # should move to train parameters
         activation = F.leaky_relu
@@ -93,23 +93,23 @@ class densenet(nn.Module):
         
         # add add extra layer in front of first linear block
         # input and output parameter still not work!!!!
-        layer0_modules = [
-                ('conv1', nn.Conv2d(3, inch, 3, stride=2, padding=1,
-                                    bias=False)),
-                ('bn1', nn.BatchNorm2d(64)),
-                ('relu1', nn.ReLU(inplace=True)),
-                ('conv2', nn.Conv2d(64, 64, 3, stride=1, padding=1,
-                                    bias=False)),
-                ('bn2', nn.BatchNorm2d(64)),
-                ('relu2', nn.ReLU(inplace=True)),
-                ('conv3', nn.Conv2d(64, 128, 3, stride=1, padding=1,
-                                    bias=False)),
-                ('bn3', nn.BatchNorm2d(128)),
-                ('relu3', nn.ReLU(inplace=True)),
-            ]
-        layer0_modules.append(('pool', nn.MaxPool2d(3, stride=2, ceil_mode=True)))
+        #layer0_modules = [
+                #('conv1', nn.Conv2d(3, inch, 3, stride=2, padding=1,
+                                    #bias=False)),
+                #('bn1', nn.BatchNorm2d(64)),
+                #('relu1', nn.ReLU(inplace=True)),
+                #('conv2', nn.Conv2d(64, 64, 3, stride=1, padding=1,
+                                    #bias=False)),
+                #('bn2', nn.BatchNorm2d(64)),
+                #('relu2', nn.ReLU(inplace=True)),
+                #('conv3', nn.Conv2d(64, 128, 3, stride=1, padding=1,
+                                    #bias=False)),
+                #('bn3', nn.BatchNorm2d(128)),
+                #('relu3', nn.ReLU(inplace=True)),
+            #]
+        #layer0_modules.append(('pool', nn.MaxPool2d(3, stride=2, ceil_mode=True)))
 
-        self.layer0 = nn.Sequential(OrderedDict(layer0_modules))
+        #self.layer0 = nn.Sequential(OrderedDict(layer0_modules))
         
         self.lin1 = LinearBlock(inch, hdim, use_bn=use_bn, activation=activation, 
                                 dropout_ratio = .1, residual=False)
@@ -120,7 +120,7 @@ class densenet(nn.Module):
         
         # the input is the concatenation of lin1 and lin 2
         # input = h_dim + out_dim_lin2; output = out_dim
-        self.lin3 = LinearBlock(hdim + n_total_graphemes, out_dim, use_bn=False, activation=None, residual=False)
+        self.lin3 = LinearBlock(hdim + n_total_graphemes, out_dim, use_bn= use_bn, activation=None, residual=False)
         
         #self.lin_layers = Sequential(lin1, lin2, lin3)
 
@@ -130,7 +130,7 @@ class densenet(nn.Module):
         h = self.base_model.features(h) # I want to make sure that this is correct
         h = torch.sum(h, dim=(-1, -2)) # pooling function 
         
-        h = self.layer0(h)
+        #h = self.layer0(h)
         
         # take out of loop and write out manually
         h1 = self.lin1(h)
