@@ -120,7 +120,7 @@ class densenet(nn.Module):
         
         # the input is the concatenation of lin1 and lin 2
         # input = h_dim + out_dim_lin2; output = out_dim
-        self.lin3 = LinearBlock(hdim + n_total_graphemes, out_dim, use_bn= use_bn, activation=None, residual=False)
+        self.lin3 = LinearBlock(hdim + n_total_graphemes, out_dim, use_bn=False, activation=None, residual=False)
         
         #self.lin_layers = Sequential(lin1, lin2, lin3)
 
