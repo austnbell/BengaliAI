@@ -51,7 +51,7 @@ lr = .001 # TODO: starting with flat LR, but need to implement scheduler
 bs = 128
 valid_size = 0.1
 patience = 9
-model_name = "test_bbox"
+model_name = "SeResNext"
 
 
 optimizer = torch.optim.Adam(classifier.parameters(), lr=lr)
@@ -194,7 +194,7 @@ for i, wkey in zip(range(epochs), itertools.cycle(weight_keys)):
     train_losses = []
     valid_losses = []
        
-    early_stopping(valid_loss, classifier)
+    early_stopping(np.mean(valid_recall), classifier)
 
     if early_stopping.early_stop:
         print("Early stopping")
