@@ -49,9 +49,9 @@ print('classifier',type(classifier))
 epochs = 30
 lr = .001 # TODO: starting with flat LR, but need to implement scheduler
 bs = 32
-valid_size = 0.2
-patience = 8
-model_name = "test_bbox"
+valid_size = 0.1
+patience = 6
+model_name = "sse_grapheme"
 
 
 optimizer = torch.optim.Adam(classifier.parameters(), lr=lr)

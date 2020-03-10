@@ -80,10 +80,10 @@ class densenet(nn.Module):
         
         # pretrained model 
         # compare DenseNet and SeResNet
-        self.base_model = models.densenet121(pretrained=True)
-        inch = self.base_model.classifier.in_features
-        #self.base_model = pretrainedmodels.__dict__['se_resnext101_32x4d'](pretrained="imagenet")
-        #inch = self.base_model.last_linear.in_features
+        #self.base_model = models.densenet121(pretrained=True)
+        #inch = self.base_model.classifier.in_features
+        self.base_model = pretrainedmodels.__dict__['se_resnext101_32x4d'](pretrained="imagenet")
+        inch = self.base_model.last_linear.in_features
         
         # should move to train parameters
         activation = F.leaky_relu
